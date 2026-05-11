@@ -1,1 +1,44 @@
-# esp8266-bac-display
+# ESP8266 BAC Display
+
+This displays the BAC of a chosen user from the [telegram bot](https://github.com/magiskaa/telegram-bot). 
+
+![BAC Display](Pictures/ESP8266-BAC-Display-breadboard.JPG)
+
+## Hardware
+
+- Microcontrollers (ESP8266MOD 12-F and Arduino Nano)
+- 4-digit 7-segment display
+- A green and a red LED
+- Jumper wires
+- 3D-printed case
+
+<!-- Wiring references:
+
+- ESP8266 BAC Display ![ESP8266 BAC Display](Diagrams/ESP8266-BAC-Display-diagram.png) -->
+
+## secrets.h
+
+Path to secrets-file: `Sketches/secrets.h`
+
+```cpp
+#ifndef SECRETS_H
+#define SECRETS_H
+
+const char* SSID = "WIFI_SSID";
+const char* PASSWORD = "WIFI_PASSWORD";
+
+const char* SERVER_NAME = "http://IP_ADDRESS:PORT/PATH";
+
+const char* USER_ID = "TELEGRAM_USER_ID";
+
+#endif
+```
+
+## License
+
+This project is licensed under the MIT License (see `LICENSE`).
+
+## Contact
+
+**Valtteri Antikainen**
+vantikaine@gmail.com
