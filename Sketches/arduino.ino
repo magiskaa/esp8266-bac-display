@@ -95,6 +95,3 @@ void setSegments(byte pattern) {
     digitalWrite(segmentPins[i], (pattern >> (7 - i)) & 0x01);
   }
 }
-
-
-

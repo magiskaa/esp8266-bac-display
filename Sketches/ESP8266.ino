@@ -5,15 +5,28 @@
 
 #define GREEN 14
 #define RED 12
+#define BUTTON 4
 
 float bac = 0.0;
 float previous = 0.0;
 bool initialized = false;
 int bac_rounded_int;
+String res;
+
+bool lastButtonState = HIGH;
+unsigned long lastBacFetch = 0;
+const unsigned long bacInterval = 3000;
 
 void setup() {
   Serial.begin(9600);
   
+  pinMode(GREEN, OUTPUT);
+  digitalWrite(GREEN, LOW);
+  pinMode(RED, OUTPUT);
+  digitalWrite(RED, LOW);
+  pinMode(BUTTON, INPUT_PULLUP);
+  
+  Serial.println("Connecting to wifi...");
   WiFi.begin(SSID, PASSWORD);
   WiFi.setSleep(false);
   WiFi.setAutoReconnect(true);
@@ -23,22 +36,34 @@ void setup() {
     Serial.print(".");
   }
   Serial.println(WiFi.localIP());
-
-  pinMode(GREEN, OUTPUT);
-  digitalWrite(GREEN, LOW);
-  pinMode(RED, OUTPUT);
-  digitalWrite(RED, LOW);
 }
 
 void loop() {
-  if (WiFi.status() == WL_CONNECTED) {
-    String url = String(SERVER_NAME) + "?id=" + USER_ID;
-    String s = httpGETRequest(url);
-    s.trim();
-    bac = s.toFloat();
+  if (WiFi.status() != WL_CONNECTED) {
+    return;
   }
+  
+  bool buttonState = digitalRead(BUTTON);
+  if (lastButtonState == HIGH && buttonState == LOW) {
+    updateBac(SERVER_NAME_DRINK);
+  }
+  lastButtonState = buttonState;
 
+  unsigned long now = millis();
+  if (now - lastBacFetch >= bacInterval) {
+    lastBacFetch = now;
+    updateBac(SERVER_NAME_BAC);
+  }
+}
+
+void updateBac(const String& serverName) {
+  String url = String(serverName) + "?id=" + userId;
+  String res = httpGETRequest(url);
+  res.trim();
+  
+  bac = res.toFloat();
   bac_rounded_int = (int)(bac * 1000.0 + 0.5);
+  
   char buf[6];
   snprintf(buf, sizeof(buf), "%04d", bac_rounded_int);
   Serial.println(buf);
@@ -56,8 +81,6 @@ void loop() {
     }
     previous = bac;
   }
-
-  delay(1000);
 }
 
 String httpGETRequest(const String& url) {
