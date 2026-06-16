@@ -3,19 +3,24 @@
 #include <Arduino_JSON.h>
 #include "secrets.h"
 
-#define GREEN 14
-#define RED 12
-#define BUTTON 4
-
 float bac = 0.0;
 float previous = 0.0;
-bool initialized = false;
 int bac_rounded_int;
+
+bool initialized = false;
 String res;
 
-bool lastButtonState = HIGH;
 unsigned long lastBacFetch = 0;
-const unsigned long bacInterval = 3000;
+const unsigned long bacInterval = 15000;
+
+bool stableButtonState = HIGH;
+bool lastButtonState = HIGH;
+
+const unsigned long debounceMs = 500;
+const unsigned long pressCooldownMs = 5000;
+
+unsigned long lastDebounceTime = 0;
+unsigned long lastAcceptedPressTime = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -44,8 +49,29 @@ void loop() {
   }
   
   bool buttonState = digitalRead(BUTTON);
-  if (lastButtonState == HIGH && buttonState == LOW) {
-    updateBac(SERVER_NAME_DRINK);
+  
+  /* FOR DEBUGGING
+  static bool prevRaw = HIGH;
+  if (buttonState != prevRaw) {
+    Serial.print("RAW button changed to: ");
+    Serial.println(buttonState == LOW ? "LOW" : "HIGH");
+    prevRaw = buttonState;
+  } */
+
+  if (buttonState != lastButtonState) {
+    lastDebounceTime = millis();
+  }
+
+  if ((millis() - lastDebounceTime) > debounceMs) {
+    if (buttonState != stableButtonState) {
+      stableButtonState = buttonState;
+
+      if (stableButtonState == LOW && millis() - lastAcceptedPressTime > pressCooldownMs) {
+        Serial.println("ACCEPTED BUTTON PRESS");
+        lastAcceptedPressTime = millis();
+        updateBac(SERVER_NAME_DRINK);
+      }
+    }
   }
   lastButtonState = buttonState;
 
